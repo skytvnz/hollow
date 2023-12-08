@@ -28,3 +28,9 @@ subprojects {
     mavenCentral()
   }
 }
+
+if (!project.tasks.findByName('postRelease')) {
+  task postRelease {
+  }
+} 
+
