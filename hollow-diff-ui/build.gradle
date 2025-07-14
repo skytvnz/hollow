@@ -1,3 +1,16 @@
+buildscript {
+    dependencies {
+        classpath "software.amazon.awssdk:sso:2.28.11"
+        classpath "software.amazon.awssdk:auth:2.28.11"
+        classpath "software.amazon.awssdk:sts:2.28.11"
+        classpath "software.amazon.awssdk:identity-spi:2.28.11"
+    }
+
+    repositories {
+        mavenCentral()
+    }
+}
+
 apply plugin: 'java-library'
 apply plugin: 'com.netflix.nebula.facet'
 
@@ -16,4 +29,27 @@ dependencies {
     implementation "jakarta.servlet:jakarta.servlet-api:6.0.0"
 
     testImplementation 'junit:junit:4.11'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url "s3://s3-maven-repository-prelive"
+            credentials(AwsCredentials) {
+                def profile = System.getProperty("aws.profile") ?: System.getenv("AWS_PROFILE")
+                def creds = software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider.builder()
+                                .profileName(profile).build().resolveCredentials()
+                accessKey = creds.accessKeyId()
+                secretKey = creds.secretAccessKey()
+                if (creds instanceof software.amazon.awssdk.identity.spi.AwsSessionCredentialsIdentity) {
+                    sessionToken = creds.sessionToken()
+                }
+            }
+        }
+    }
 }
